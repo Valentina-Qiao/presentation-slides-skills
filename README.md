@@ -1,21 +1,46 @@
 # Presentation Slides Skills（导航入口）
 
-把「内容文档 → 幻灯片 → HTML 演讲页 → PDF」流程化的一组 AI Agent Skills。已拆分为三个**相互独立、可单独安装复用**的公开仓库；本仓为导航与总览入口，权威实现以三个独立仓为准（仓内早期版本子目录仅留档，不再更新）。
+把「内容文档 → 幻灯片 → HTML 演讲页 → PDF」流程化的一组 AI Agent Skills。三个 Skill **相互独立、可单独安装复用**，分处「内容层」与「表现层」，本仓为导航与总览入口；权威实现以三个独立仓为准（仓内早期版本子目录仅留档，不再更新）。
 
-## 三个独立仓库
+## 一图看懂三者分工
 
-| Skill | 层级 | 一句话作用 | 仓库 |
+- **A `ppt-content-blueprint` ＝ 内容大脑**：想清楚讲几页、每页讲什么、逻辑怎么排。**不碰任何配色与代码。**
+- **B `gznf-html-slides` ＝ 南院专属美工**：把蓝图做成广州南方学院深红模板的 HTML/PDF，品牌规格已写死，开箱即用。
+- **C `pptx-stage-slides` ＝ 通用模板美工**：给它任意一个 16:9 `.pptx`，先解析成主题规格、经你确认后再复刻成 HTML/PDF，模板可插拔。
+
+一句话：**A 决定“讲什么”，B/C 决定“长什么样”；B 是一套固定品牌皮肤，C 是能换皮肤的工艺线。**
+
+## 三个 Skill 详解
+
+| 维度 | A · ppt-content-blueprint | B · gznf-html-slides | C · pptx-stage-slides |
 |---|---|---|---|
-| `ppt-content-blueprint` | 内容层·通用 | 把内容文档拆成逐页蓝图（页型/要点/关系/表达元素/数据口径），不绑模板 | [打开仓库](https://github.com/Valentina-Qiao/ppt-content-blueprint) |
-| `pptx-stage-slides` | 表现层·通用工艺 | 解析任意 16:9 `.pptx` → 主题规格确认 → 固定舞台 HTML/PDF | [打开仓库](https://github.com/Valentina-Qiao/pptx-stage-slides) |
-| `gznf-html-slides` | 表现层·品牌特化 | 广州南方学院深红模板的快捷复刻通道与 PDF 导出 | [打开仓库](https://github.com/Valentina-Qiao/gznf-html-slides) |
+| 层级 | 内容层 | 表现层（品牌特化） | 表现层（通用工艺） |
+| 解决什么问题 | 文档怎么拆成逐页 PPT、每页重点、并列/流程/因果关系、表达元素、数据口径 | 忠实复刻广州南方学院深红学术模板并导出 PDF | 解析任意 16:9 PPTX 模板并同风格复刻、导出 PDF |
+| 输入 | 论文/报告/方案等内容文档（md/word/pdf 等） | A 产出的逐页蓝图（+南院模板已内置） | A 产出的逐页蓝图 + 一个 `.pptx` 模板 |
+| 产物 | 逐页内容蓝图（文本，无样式） | 单文件自包含 16:9 HTML + PDF | 主题规格确认单 + 单文件 HTML + PDF |
+| 是否绑模板 | 否，完全解耦 | 是，写死南院 #780000 深红体系 | 否，模板可插拔（仅 .pptx、仅 16:9） |
+| 关键关卡 | 关系判定（并列禁用箭头）、一页一论点 | 不改文案、内容不超舞台 | **theme spec 必须先经用户确认**再制作 |
+| 仓库 | [打开](https://github.com/Valentina-Qiao/ppt-content-blueprint) | [打开](https://github.com/Valentina-Qiao/gznf-html-slides) | [打开](https://github.com/Valentina-Qiao/pptx-stage-slides) |
 
-## 怎么选用
+## 什么场景单独用
 
-- 只做内容大纲：单独用 `ppt-content-blueprint`。
-- 套用新 PPTX 模板：`pptx-stage-slides`（先解析出 theme spec，确认后再制作；仅支持 .pptx、16:9）。
-- 广州南方学院场景：用内置品牌规格的 `gznf-html-slides`，省去模板解析。
-- 成套使用：先 `ppt-content-blueprint` 出蓝图，再交 `gznf-html-slides` 或 `pptx-stage-slides` 视觉化并导出 PDF。
+- **只要大纲、还没决定视觉，或要在不同模板间复用同一套内容** → 单独用 **A**。产物是与模板无关的蓝图，后续想换任何皮肤都能接。
+- **已经有逐页内容，且就是广州南方学院深红风** → 单独用 **B**（品牌 token、骨架、PDF 脚本都现成，最省事）。
+- **已经有逐页内容，且要套用一个新的/其他品牌的 16:9 `.pptx` 模板** → 单独用 **C**；它会先解析模板并把色板字体版式给你确认，确认后才动手。
+
+## 什么场景搭配使用（推荐流水线）
+
+标准做法是 **A 出蓝图 → B 或 C 做视觉 → 确认后导 PDF**，内容与样式解耦、改皮肤不用重想逻辑：
+
+1. **南院答辩/汇报成套**：`A（拆页蓝图）→ B（深红模板 HTML/PDF）`。
+2. **换一套新模板成套**：`A（拆页蓝图）→ C（解析新 PPTX→确认 theme spec→HTML/PDF）`。
+3. **同一内容出多套风格**：只跑一次 A，把同一份蓝图分别交给 B 和 C，避免重复梳理逻辑。
+
+### 怎么在 B 和 C 之间选
+
+- 模板就是广州南方学院那套 → 选 **B**（内置规格，跳过模板解析与确认）。
+- 模板是其他任意 16:9 `.pptx` → 选 **C**。
+- 手头只有图片/手绘稿/现成 HTML 而无 `.pptx`，或画幅不是 16:9 → C 当前不支持，需先提供合规 `.pptx`。
 
 ## 共同约定
 
