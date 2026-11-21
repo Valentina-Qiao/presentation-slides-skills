@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>固定舞台演讲页 · 通用骨架（按 theme spec 注入）</title>
+<style>
+/* ===== 按确认后的 theme spec 替换下面这组变量与字体即可，勿改结构类名 ===== */
+:root{
+  --primary:#1F3864;        /* TODO: 换成 spec.color.primary */
+  --primary-dark:#16305B;   /* TODO: spec.color.primary_dark */
+  --primary-soft:#7f8fa6;   /* 弱化主色：虚线/箭头 */
+  --ink:#1F2328; --gray:#555; --muted:#8a8a8a;
+  --bg:#fafbfc; --line:#e3e6ea;
+  --on-primary:#fff;        /* 主色块上的文字色 */
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  background:#20242b;color:var(--ink);
+  /* TODO: cjk 栈换成 spec.font.cjk；西文衬线需求另设 .serif{font-family:Georgia,serif} */
+  font-family:"Microsoft YaHei","PingFang SC","Source Han Sans SC","等线",sans-serif;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.stage{width:1280px;height:720px;position:relative;flex:none;background:#fff;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.slide{position:absolute;inset:0;display:none;background:#fff;}
+.slide.active{display:block;}
+/* 显隐铁规则，勿删 */
+.slide.chapter{display:none;}
+.slide.chapter.active{display:grid;}
+.toc .chapter{display:grid;height:100%;}
+
+/* 顶部导航 */
+.topbar{height:72px;background:var(--primary);display:flex;align-items:stretch;color:var(--on-primary);}
+.tb-title{display:flex;align-items:center;gap:14px;padding:0 26px;font-size:24px;font-weight:700;background:var(--primary-dark);}
+.tb-title .dot{width:10px;height:30px;background:var(--on-primary);display:inline-block;}
+.tb-nav{margin-left:auto;display:flex;}
+.tb-nav span{display:flex;align-items:center;padding:0 30px;font-size:20px;}
+.tb-nav span.cur{background:#fff;color:var(--primary);font-weight:700;}
+.body{padding:34px 46px;height:calc(720px - 72px);position:relative;} /* 内容安全高约580px */
+.section-head{display:flex;align-items:baseline;gap:18px;margin-bottom:24px;}
+.section-head h2{font-size:30px;font-weight:800;}
+.section-head .en{font-family:Georgia,serif;font-size:16px;color:var(--muted);}
+.pagenum{position:absolute;right:0;bottom:0;width:46px;height:46px;background:var(--primary);color:var(--on-primary);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;}
+.accent{color:var(--primary);font-weight:700;}
+
+/* 封面 */
+.cover{padding:34px 44px;border:2px solid var(--primary);display:flex;flex-direction:column;height:100%;}
+.cover-head{display:flex;justify-content:center;padding:10px 0 6px;min-height:110px;align-items:center;}
+.cover-head img{height:110px;object-fit:contain;}
+.cover-head .logo-ph{color:var(--muted);font-size:16px;border:1px dashed var(--line);padding:30px 60px;}
+.cover-mid{flex:1;background:var(--primary);margin:26px -4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;}
+.cover-mid h1{color:var(--on-primary);font-size:42px;font-weight:800;text-align:center;letter-spacing:2px;line-height:1.4;}
+.cover-mid .sub-cn{color:rgba(255,255,255,.82);font-size:24px;}
+.cover-mid .sub-en{font-family:Georgia,serif;color:rgba(255,255,255,.7);font-size:21px;}
+.cover-info{display:grid;grid-template-columns:1fr 1fr;gap:22px 80px;padding:10px 90px 0;}
+.cover-info .ci{display:flex;align-items:center;gap:16px;font-size:20px;}
+.cover-info .ci .ic{width:34px;height:34px;background:var(--primary);color:var(--on-primary);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;}
+
+/* 章节页/目录 */
+.chapter{grid-template-columns:360px 1fr;height:100%;}
+.chapter .left{background:var(--primary);position:relative;padding:40px 30px;}
+.chapter .left .frame{position:absolute;inset:28px;border:1.5px solid rgba(255,255,255,.55);border-radius:4px;}
+.chapter .left .inner{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:center;}
+.chapter .left .no{color:#fff;font-size:52px;font-weight:800;letter-spacing:2px;}
+.chapter .left .part{font-family:Georgia,serif;color:rgba(255,255,255,.82);font-size:24px;letter-spacing:4px;margin-top:10px;}
+.chapter .right{padding:70px 60px;display:flex;flex-direction:column;justify-content:center;}
+.chapter .right h2{font-size:44px;font-weight:800;}
+.chapter .right .en{font-family:Georgia,serif;font-size:20px;color:var(--gray);margin:16px 0 36px;}
+.toc .right{justify-content:center;gap:14px;}
+.toc-item{display:flex;align-items:center;gap:26px;padding:14px 10px;}
+.toc-item .idx{font-family:Georgia,serif;font-style:italic;font-size:32px;color:var(--muted);font-weight:700;}
+.toc-item .tt{font-size:32px;font-weight:800;}
+
+/* 收尾 */
+.end{background:var(--primary);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;height:100%;}
+.end h2{color:#fff;font-size:46px;font-weight:800;letter-spacing:4px;}
+.end p{font-family:Georgia,serif;color:rgba(255,255,255,.82);font-size:22px;}
+
+.controls{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:18px;z-index:50;}
+.controls button{width:40px;height:40px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:22px;cursor:pointer;}
+.controls .counter{color:#fff;font-size:16px;min-width:60px;text-align:center;align-self:center;}
+@media print{.controls{display:none;}}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+
+  <!-- 封面：把 .logo-ph 换成 <img src="上传后的不过期URL" alt="校名/校徽"> -->
+  <section class="slide active">
+    <div class="cover">
+      <div class="cover-head"><span class="logo-ph">〔此处放校徽校名图片〕</span></div>
+      <div class="cover-mid">
+        <h1>论文主标题</h1>
+        <div class="sub-cn">副标题：研究方法与对象</div>
+        <div class="sub-en">English Subtitle</div>
+      </div>
+      <div class="cover-info">
+        <div class="ci"><span class="ic">辩</span><b>答辩人：</b><span>姓名</span></div>
+        <div class="ci"><span class="ic">导</span><b>导　师：</b><span>姓名</span></div>
+        <div class="ci"><span class="ic">班</span><b>班　级：</b><span>班级</span></div>
+        <div class="ci"><span class="ic">日</span><b>日　期：</b><span>YYYY 年 M 月</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 目录 -->
+  <section class="slide toc">
+    <div class="chapter">
+      <div class="left"><div class="frame"></div><div class="inner"><div class="no" style="font-size:46px;">目录</div><div class="part">CONTENT</div></div></div>
+      <div class="right">
+        <div class="toc-item"><span class="idx">01</span><span class="tt">第一章</span></div>
+        <div class="toc-item"><span class="idx">02</span><span class="tt">第二章</span></div>
+        <div class="toc-item"><span class="idx">03</span><span class="tt">第三章</span></div>
+        <div class="toc-item"><span class="idx">04</span><span class="tt">第四章</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 章节过渡 -->
+  <section class="slide chapter">
+    <div class="left"><div class="frame"></div><div class="inner"><div class="no">NO.1</div><div class="part">PART ONE</div></div></div>
+    <div class="right"><h2>章节名称</h2><span class="en">Chapter Title</span></div>
+  </section>
+
+  <!-- 内容页示例：导航当前项加 .cur；方块页码按顺序填 -->
+  <section class="slide">
+    <div class="topbar">
+      <div class="tb-title"><span class="dot"></span>1.1 小节标题</div>
+      <div class="tb-nav"><span class="cur">第一章</span><span>第二章</span><span>第三章</span><span>第四章</span></div>
+    </div>
+    <div class="body">
+      <div class="section-head"><h2>结论句页标题</h2><span class="en">English Heading</span></div>
+      <p style="font-size:18px;line-height:2;color:var(--gray);">替换为本页内容：<span class="accent">关键词加粗</span>、卡片、图表、时间轴等；总高勿超约 580px，并列模块间不加因果箭头。</p>
+      <div class="pagenum">4</div>
+    </div>
+  </section>
+
+  <!-- 收尾 -->
+  <section class="slide">
+    <div class="end"><h2>恳请各位老师批评指正</h2><p>Thanks for Your Attention</p></div>
+  </section>
+
+</div>
+
+<div class="controls">
+  <button id="prev" aria-label="上一页">‹</button>
+  <span class="counter" id="counter">1 / 5</span>
+  <button id="next" aria-label="下一页">›</button>
+</div>
+
+<script>
+/* 翻页接口契约：保留全局 slides / show(i) / cur 与 id=stage，PDF 脚本依赖 */
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const total=slides.length;
+function show(i){
+  cur=Math.max(0,Math.min(total-1,i));
+  slides.forEach((s,k)=>s.classList.toggle('active',k===cur));
+  document.getElementById('counter').textContent=(cur+1)+' / '+total;
+}
+document.getElementById('prev').onclick=()=>show(cur-1);
+document.getElementById('next').onclick=()=>show(cur+1);
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft')show(cur-1);
+  if(e.key==='ArrowRight')show(cur+1);
+});
+function fit(){
+  const s=Math.min(window.innerWidth/1280,window.innerHeight/720);
+  document.getElementById('stage').style.transform='scale('+s+')';
+}
+window.addEventListener('resize',fit);fit();show(0);
+</script>
+</body>
+</html>
